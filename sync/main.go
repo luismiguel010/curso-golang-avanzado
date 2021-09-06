@@ -32,5 +32,5 @@ func main() {
 		go Deposit(i * 100, &wg, &lock)
 	}
 	wg.Wait()
-	fmt.Println(Balance())
+	fmt.Println(Balance(&lock))
 }
