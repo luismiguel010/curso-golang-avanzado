@@ -15,21 +15,21 @@ func Fibonacci(n int) int {
 }
 
 type Memory struct {
-	f Function
+	f     Function
 	cache map[int]FunctionResult
-	lock sync.Mutex
+	lock  sync.Mutex
 }
 
 type Function func(key int) (interface{}, error)
 
 type FunctionResult struct {
 	value interface{}
-	err error
+	err   error
 }
 
 func NewCache(f Function) *Memory {
 	return &Memory{
-		f: f,
+		f:     f,
 		cache: make(map[int]FunctionResult),
 	}
 }
@@ -49,23 +49,29 @@ func (m *Memory) Get(key int) (interface{}, error) {
 
 func GetFibonacci(n int) (interface{}, error) { //Retornar interface{} quiere decir que puede devolver cualquier tipo de valor
 	return Fibonacci(n), nil
-} 
+}
 
 func main() {
 	cache := NewCache(GetFibonacci)
-	fibo := []int{42, 40, 41, 42, 38}
+	fibo := []int{42, 41, 38, 40, 38, 42, 42, 42, 42, 42, 42}
 	var wg sync.WaitGroup
+	maxGoRoutines := 2
+	channel := make(chan int, maxGoRoutines)
+	startTotal := time.Now()
 	for _, n := range fibo {
 		wg.Add(1)
-		go func (index int) {
+		go func(index int) {
 			defer wg.Done()
+			channel <- 1
 			start := time.Now()
 			value, err := cache.Get(index)
 			if err != nil {
 				log.Println(err)
 			}
 			fmt.Printf("%d, %s, %d\n", index, time.Since(start), value)
+			<-channel
 		}(n)
 	}
 	wg.Wait()
+	fmt.Printf("Tiempo total: %s\n", time.Since(startTotal))
 }
